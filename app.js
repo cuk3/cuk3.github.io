@@ -16,8 +16,8 @@ const ALLOWED_API_HOSTS = [
   '103.75.126.27.sslip.io',
 ];
 
-const FETCH_TIMEOUT_MS = 8_000;
-const RETRY_DELAYS_MS  = [1_000, 3_000, 5_000];
+const FETCH_TIMEOUT_MS = 6_000;
+const RETRY_DELAYS_MS  = [1_500, 3_000];
 const LS_CACHE_KEY     = 'proxy_cache';
 
 // ── Состояние ────────────────────────────────────────────
@@ -105,6 +105,8 @@ async function fetchWithRetry(url, options = {}) {
       return await fetchWithTimeout(url, options);
     } catch (err) {
       lastError = err;
+      // Не делаем retry при AbortError (таймаут) — сразу падаем в фоллбэк
+      if (err.name === 'AbortError') break;
       if (attempt < RETRY_DELAYS_MS.length) {
         await new Promise(r => setTimeout(r, RETRY_DELAYS_MS[attempt]));
       }
@@ -246,8 +248,9 @@ function renderProxy(data, fromCache = false) {
   copyBtn.style.display      = 'flex';
   if (navigator.share) shareBtn.style.display = 'flex';
 
-  // Статус
+  // Статус — очищаем старые точки перед добавлением новой
   statusEl.className = fromCache ? 'status loading' : 'status';
+  statusEl.querySelectorAll('.status-dot, .spinner').forEach(el => el.remove());
   statusTextEl.textContent = '';
   const dot = document.createElement('span');
   dot.className = 'status-dot';
