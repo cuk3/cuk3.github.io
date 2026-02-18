@@ -2,6 +2,15 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
+  <!-- Убиваем все Service Worker — они могли кешировать старые баганые версии файлов -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+      });
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    }
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Бесплатный MTProto прокси для Telegram. Обход блокировок в России без VPN.">
 
@@ -498,10 +507,6 @@
 
   <div class="toast" id="toast">Ссылка скопирована!</div>
 
-  <!--
-    SRI-хэш гарантирует, что загружается именно та версия библиотеки,
-    которую мы проверили. Любое изменение файла на CDN → скрипт блокируется.
-  -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="app.js"></script>
 </body>
