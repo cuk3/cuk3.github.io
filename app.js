@@ -340,19 +340,33 @@ async function copyLink() {
 
 // ── Web Share API ─────────────────────────────────────────
 async function shareProxy() {
-  if (!currentProxy || !navigator.share) return;
+  if (!navigator.share) return;
 
-  const safeIp     = encodeURIComponent(currentProxy.ip);
-  const safePort   = Number(currentProxy.port);
-  const safeSecret = encodeURIComponent(currentProxy.secret);
-  const proxyUrl   = `https://t.me/proxy?server=${safeIp}&port=${safePort}&secret=${safeSecret}`;
+  const siteUrl    = 'https://cuk3.github.io/';
+  const shareText  =
+    '🚀 Бесплатный MTProxy для Telegram\n' +
+    'Обходи блокировку за 10 секунд — без VPN и регистрации\n\n' +
+    '✅ Бесплатно\n' +
+    '✅ Работает прямо сейчас\n' +
+    '✅ Одна кнопка\n\n' +
+    '📢 Канал: t.me/telegaLIFEpls';
 
+  // Попытаемся прикрепить превью-картинку (поддерживается не всеми браузерами)
   try {
-    await navigator.share({
-      title: 'Рабочий MTProxy для Telegram',
-      text:  'Бесплатный прокси — обходи блокировку без VPN',
-      url:   proxyUrl,
-    });
+    const imgResp = await fetch('./og-preview.png');
+    if (imgResp.ok) {
+      const blob = await imgResp.blob();
+      const file = new File([blob], 'proxy-landing.png', { type: blob.type });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ title: 'Фикс Телеграм', text: shareText, url: siteUrl, files: [file] });
+        return;
+      }
+    }
+  } catch {}
+
+  // Фоллбэк: без файла
+  try {
+    await navigator.share({ title: 'Фикс Телеграм', text: shareText, url: siteUrl });
   } catch (err) {
     if (err.name !== 'AbortError') console.warn('Share error:', err);
   }
