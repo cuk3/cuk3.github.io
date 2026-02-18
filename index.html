@@ -604,7 +604,8 @@ function renderProxy(data, fromCache) {
       correctLevel: QRCode.CorrectLevel.M
     });
   }
-  showEl('qrContainer', 'flex');
+  var qrWrap = document.getElementById('qrContainer');
+  if (qrWrap) { qrWrap.classList.remove('hidden'); qrWrap.style.display = 'flex'; }
   showEl('copyBtn', 'flex');
   if (navigator.share) showEl('shareBtn', 'flex');
 
