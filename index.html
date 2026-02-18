@@ -1,326 +1,517 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Бесплатный MTProto прокси для Telegram. Обход блокировок в России без VPN.">
-    <title>Прокси для Telegram — Быстрый доступ к мессенджеру</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Бесплатный MTProto прокси для Telegram. Обход блокировок в России без VPN.">
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            color: #333;
-        }
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website">
+  <meta property="og:title"       content="Фикс Телеграм — бесплатный прокси">
+  <meta property="og:description" content="Получи рабочий MTProxy за 10 секунд. Без VPN, без регистрации.">
+  <meta property="og:image"       content="og-preview.png">
+  <meta name="twitter:card"       content="summary_large_image">
 
-        .container {
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
-            width: 100%;
-            padding: 40px 30px;
-            text-align: center;
-        }
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#667eea">
+  <link rel="apple-touch-icon" href="icon-192.png">
 
-        h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: #1a1a1a;
-        }
+  <!-- Favicon SVG -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
-        .subtitle {
-            color: #666;
-            font-size: 15px;
-            margin-bottom: 30px;
-        }
+  <!-- DNS prefetch / preconnect -->
+  <link rel="preconnect" href="https://gist.githubusercontent.com">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="dns-prefetch" href="https://103.75.126.27.sslip.io">
 
-        .emoji {
-            font-size: 48px;
-            margin-bottom: 20px;
-            display: block;
-        }
+  <!--
+    Content Security Policy:
+    - script-src: только свои скрипты + конкретная CDN-библиотека с SRI
+    - style-src:  'unsafe-inline' нужен из-за inline-стилей в HTML (style="display:none")
+    - connect-src: gist (dead drop) + https: (динамический API)
+    - img-src:    data: нужен для QR-кода (canvas→dataURL)
+    - form-action / base-uri: ограничены своим origin
+  -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'none';
+    script-src  'self' https://cdnjs.cloudflare.com;
+    style-src   'self' 'unsafe-inline';
+    connect-src https://gist.githubusercontent.com https:;
+    img-src     'self' data: blob:;
+    font-src    'self';
+    base-uri    'self';
+    form-action 'none';
+  ">
 
-        .qr-container {
-            background: #f7f9fc;
-            border-radius: 16px;
-            padding: 20px;
-            margin: 0 auto 25px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: fit-content;
-        }
+  <title>Фикс для телеграм — обход блокировки</title>
 
-        #qrcode {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        #qrcode img {
-            display: block;
-            margin: 0 auto;
-        }
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        .qr-hint {
-            margin-top: 10px;
-            font-size: 13px;
-            color: #666;
-        }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+      color: #333;
+    }
 
-        .button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 16px 24px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            text-decoration: none;
-        }
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 650px;
+      width: 100%;
+      padding: 25px;
+    }
 
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
+    /* ── Header ───────────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
 
-        .button:active {
-            transform: translateY(0);
-        }
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-        .button.secondary {
-            background: #f7f9fc;
-            color: #667eea;
-            border: 2px solid #e1e8f0;
-        }
+    .emoji { font-size: 32px; }
 
-        .button.secondary:hover {
-            background: #eef2f7;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-        }
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin: 0;
+    }
 
-        .link-box {
-            background: #f7f9fc;
-            border: 2px solid #e1e8f0;
-            border-radius: 12px;
-            padding: 14px;
-            margin-bottom: 20px;
-            word-break: break-all;
-            font-size: 13px;
-            color: #555;
-            font-family: 'Courier New', monospace;
-            user-select: all;
-            cursor: pointer;
-            transition: background 0.2s;
-            text-align: center;
-        }
+    .social-links {
+      display: flex;
+      gap: 8px;
+    }
 
-        .link-box:hover {
-            background: #eef2f7;
-        }
+    .social-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
 
-        .divider {
-            height: 1px;
-            background: #e1e8f0;
-            margin: 30px 0;
-        }
+    .social-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
 
-        .footer-links {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+    /* ── Subtitle ─────────────────────────────────────── */
+    .subtitle {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
 
-        .footer-link {
-            color: #667eea;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: color 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+    /* ── Network stats ────────────────────────────────── */
+    .network-stats {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
 
-        .footer-link:hover {
-            color: #764ba2;
-            text-decoration: underline;
-        }
+    .network-stats h3 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      opacity: 0.9;
+    }
 
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: #10b981;
-            color: white;
-            padding: 16px 24px;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 500;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
+    .network-stats .stat  { font-size: 24px; font-weight: 700; }
+    .network-stats .label { font-size: 11px; opacity: 0.8; margin-top: 2px; }
 
-        .toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
+    /* ── Main content grid ────────────────────────────── */
+    .main-content {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 20px;
+    }
 
-        .status {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            background: #10b981;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
-            margin: 0 auto 20px;
-        }
+    /* ── QR section ───────────────────────────────────── */
+    .qr-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: white;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
+    .qr-container {
+      background: #f7f9fc;
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+    #qrcode {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        @media (max-width: 480px) {
-            .container {
-                padding: 30px 20px;
-            }
-            
-            h1 {
-                font-size: 24px;
-            }
-            
-            .footer-links {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-    </style>
+    #qrcode img { display: block; }
+
+    .qr-hint {
+      font-size: 11px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .stats-box {
+      background: #f0f7ff;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #2563eb;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* ── Actions ──────────────────────────────────────── */
+    .actions-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    /* ── Status badge ─────────────────────────────────── */
+    .status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: #10b981;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+
+    .status.loading { background: #f59e0b; }
+    .status.error   { background: #ef4444; }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.5; }
+    }
+
+    .spinner {
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 1s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      0%   { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* ── Buttons ──────────────────────────────────────── */
+    .button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .button:active { transform: translateY(0); }
+
+    .button.secondary {
+      background: #f7f9fc;
+      color: #667eea;
+      border: 2px solid #e1e8f0;
+    }
+
+    .button.secondary:hover {
+      background: #eef2f7;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Link box ─────────────────────────────────────── */
+    .link-box {
+      background: #f7f9fc;
+      border: 2px solid #e1e8f0;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 15px;
+      word-break: break-all;
+      font-size: 11px;
+      color: #555;
+      font-family: 'Courier New', monospace;
+      user-select: all;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-align: center;
+    }
+
+    .link-box:hover { background: #eef2f7; }
+
+    /* ── Toast ────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #10b981;
+      color: white;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Fade-in для карточки ────────────────────────── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .container {
+      animation: fadeInUp 0.45s ease both;
+    }
+
+    /* ── Fade-in для QR-блока ────────────────────────── */
+    .qr-container {
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .qr-container.hidden {
+      opacity: 0;
+      transform: scale(0.92);
+      pointer-events: none;
+    }
+
+    /* ── Тёмная тема ─────────────────────────────────── */
+    @media (prefers-color-scheme: dark) {
+      body { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); }
+
+      .container {
+        background: #1e1e2e;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+      }
+
+      h1 { color: #e2e8f0; }
+
+      .subtitle { color: #94a3b8; }
+
+      .qr-container { background: #2a2a3e; }
+      .qr-hint      { color: #94a3b8; }
+
+      .stats-box {
+        background: #1e3a5f;
+        color: #60a5fa;
+      }
+
+      .link-box {
+        background: #2a2a3e;
+        border-color: #3f3f5c;
+        color: #94a3b8;
+      }
+
+      .link-box:hover { background: #333350; }
+
+      .button.secondary {
+        background: #2a2a3e;
+        color: #818cf8;
+        border-color: #3f3f5c;
+      }
+
+      .button.secondary:hover { background: #333350; }
+    }
+
+    /* ── Responsive ───────────────────────────────────── */
+    @media (max-width: 600px) {
+      .main-content {
+        grid-template-columns: 1fr;
+        justify-items: center;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .title-group   { justify-content: center; }
+      .social-links  { justify-content: center; }
+
+      #qrcode canvas,
+      #qrcode img {
+        width: 180px !important;
+        height: 180px !important;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
+  <div class="container">
+
+    <div class="header">
+      <div class="title-group">
         <span class="emoji">🚀</span>
-        <h1>Прокси для Telegram</h1>
-        <p class="subtitle">Быстрый и бесплатный доступ к мессенджеру</p>
-        
-        <div class="status">
-            <span class="status-dot"></span>
-            Сервер работает
-        </div>
-
-        <div class="qr-container">
-            <div id="qrcode"></div>
-            <div class="qr-hint">📱 Сканируйте камерой телефона</div>
-        </div>
-
-        <button class="button" onclick="copyLink()">
-            📋 Скопировать ссылку
-        </button>
-
-        <div class="link-box" onclick="copyLink()">
-            https://t.me/proxy?server=62.60.249.152&port=443&secret=ee9fe4b27de45ee5f794432d4c01004da07777772e676f6f676c652e636f6d
-        </div>
-
-        <a href="tg://proxy?server=62.60.249.152&port=443&secret=ee9fe4b27de45ee5f794432d4c01004da07777772e676f6f676c652e636f6d" class="button secondary">
-            ✈️ Открыть в Telegram
+        <h1>Фикс Телеграм</h1>
+      </div>
+      <div class="social-links">
+        <a href="https://t.me/telegaLIFEpls" class="social-btn"
+           target="_blank" rel="noopener noreferrer">
+          📢 Канал
         </a>
-
-        <div class="divider"></div>
-
-        <div class="footer-links">
-            <a href="https://t.me/telegaLIFEpls" class="footer-link" target="_blank">
-                ✈️ Наш канал
-            </a>
-            <a href="https://t.me/telegaLIFEpls_bot" class="footer-link" target="_blank">
-                🤖 Получить прокси в боте
-            </a>
-            <a href="https://github.com/cuk3/MTProto-telegram-server" class="footer-link" target="_blank">
-                📚 Создать свой прокси
-            </a>
-        </div>
+        <a href="https://t.me/telegaLIFEpls_bot" class="social-btn"
+           target="_blank" rel="noopener noreferrer">
+          🤖 Бот
+        </a>
+      </div>
     </div>
 
-    <div class="toast" id="toast">Ссылка скопирована!</div>
+    <p class="subtitle">Быстрый и бесплатный обход блокировки</p>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script>
-        // Ссылка для копирования (работает везде)
-        const proxyUrl = 'https://t.me/proxy?server=62.60.249.152&port=443&secret=ee9fe4b27de45ee5f794432d4c01004da07777772e676f6f676c652e636f6d';
-        
-        // Ссылка для QR-кода (открывается прямо в Telegram на телефоне)
-        const proxyUrlDirect = 'tg://proxy?server=62.60.249.152&port=443&secret=ee9fe4b27de45ee5f794432d4c01004da07777772e676f6f676c652e636f6d';
+    <div class="network-stats" id="networkStats" style="display: none;">
+      <h3>Активных пользователей в сети</h3>
+      <div class="stat" id="totalUsers">-</div>
+      <div class="label" id="networkInfo">Загрузка...</div>
+    </div>
 
-        // Генерация QR-кода
-        new QRCode(document.getElementById('qrcode'), {
-            text: proxyUrlDirect,
-            width: 200,
-            height: 200,
-            colorDark: '#1a1a1a',
-            colorLight: '#f7f9fc',
-            correctLevel: QRCode.CorrectLevel.M
-        });
+    <div class="main-content">
 
-        // Копирование ссылки
-        function copyLink() {
-            navigator.clipboard.writeText(proxyUrl).then(() => {
-                showToast();
-            }).catch(() => {
-                // Fallback для старых браузеров
-                const textArea = document.createElement('textarea');
-                textArea.value = proxyUrl;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                showToast();
-            });
-        }
+      <div class="qr-section">
+        <div class="status loading" id="status">
+          <span class="spinner"></span>
+          <span id="statusText">Подбираем...</span>
+        </div>
 
-        // Показ уведомления
-        function showToast() {
-            const toast = document.getElementById('toast');
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2500);
-        }
-    </script>
+        <div class="qr-container hidden" id="qrContainer" style="display: none;">
+          <div id="qrcode"></div>
+          <div class="qr-hint">📱 Сканируй камерой</div>
+        </div>
+
+        <div class="stats-box" id="proxyStats" style="display: none;">
+          👥 <span id="proxyUsers">0</span> польз.
+        </div>
+      </div>
+
+      <div class="actions-section">
+        <button class="button" id="getProxyBtn" onclick="getNewProxy()">
+          🔄 Получить прокси
+        </button>
+
+        <button class="button secondary" id="copyBtn"
+                onclick="copyLink()" style="display: none;">
+          📋 Скопировать
+        </button>
+
+        <a href="#" id="telegramLink" class="button secondary"
+           style="display: none;">
+          ✈️ Открыть в Telegram
+        </a>
+
+        <button class="button secondary" id="shareBtn"
+                onclick="shareProxy()" style="display: none;">
+          🔗 Поделиться
+        </button>
+      </div>
+
+    </div>
+
+    <div class="link-box" id="linkBox"
+         onclick="copyLink()" style="display: none;"></div>
+
+  </div>
+
+  <div class="toast" id="toast">Ссылка скопирована!</div>
+
+  <!--
+    SRI-хэш гарантирует, что загружается именно та версия библиотеки,
+    которую мы проверили. Любое изменение файла на CDN → скрипт блокируется.
+  -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+    integrity="sha512-CNn6ONM6kFT2wPMd6btkFhMzmqDItH8ER/RwYFRSBDqNptHb4OLV6NLxNZnBmq88N1g16YNz7rxJa1yCFBxNQ=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer">
+  </script>
+  <script src="app.js"></script>
 </body>
 </html>
