@@ -593,19 +593,22 @@ function renderProxy(data, fromCache) {
   var tl = document.getElementById('telegramLink');
   if (tl) { tl.href = tg; showEl('telegramLink', 'flex'); }
 
+  var qrWrap = document.getElementById('qrContainer');
+  if (qrWrap) { qrWrap.classList.remove('hidden'); qrWrap.style.display = 'flex'; }
+
   var qrEl = document.getElementById('qrcode');
   if (qrEl && typeof QRCode !== 'undefined') {
     qrEl.innerHTML = '';
     var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    new QRCode(qrEl, {
-      text: tg, width: 150, height: 150,
-      colorDark: dark ? '#e2e8f0' : '#1a1a1a',
-      colorLight: dark ? '#2a2a3e' : '#f7f9fc',
-      correctLevel: QRCode.CorrectLevel.M
-    });
+    setTimeout(function() {
+      new QRCode(qrEl, {
+        text: tg, width: 150, height: 150,
+        colorDark: dark ? '#e2e8f0' : '#1a1a1a',
+        colorLight: dark ? '#2a2a3e' : '#f7f9fc',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }, 50);
   }
-  var qrWrap = document.getElementById('qrContainer');
-  if (qrWrap) { qrWrap.classList.remove('hidden'); qrWrap.style.display = 'flex'; }
   showEl('copyBtn', 'flex');
   if (navigator.share) showEl('shareBtn', 'flex');
 
