@@ -33,16 +33,7 @@
     - img-src:    data: нужен для QR-кода (canvas→dataURL)
     - form-action / base-uri: ограничены своим origin
   -->
-  <meta http-equiv="Content-Security-Policy" content="
-    default-src 'none';
-    script-src  'self' https://cdnjs.cloudflare.com;
-    style-src   'self' 'unsafe-inline';
-    connect-src https://gist.githubusercontent.com https:;
-    img-src     'self' data: blob:;
-    font-src    'self';
-    base-uri    'self';
-    form-action 'none';
-  ">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; connect-src *; img-src 'self' data: blob:; font-src 'self'; base-uri 'self'; form-action 'none';">
 
   <title>Фикс для телеграм — обход блокировки</title>
 
@@ -508,7 +499,7 @@
   -->
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
-    integrity="sha512-CNn6ONM6kFT2wPMd6btkFhMzmqDItH8ER/RwYFRSBDqNptHb4OLV6NLxNZnBmq88N1g16YNz7rxJa1yCFBxNQ=="
+    integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGswpsCnE8EHs01w=="
     crossorigin="anonymous"
     referrerpolicy="no-referrer">
   </script>
