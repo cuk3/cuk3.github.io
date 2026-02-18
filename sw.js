@@ -1,6 +1,6 @@
 // Proxy Landing — Service Worker (PWA)
 // Версию меняй при каждом деплое чтобы инвалидировать кеш
-const CACHE_NAME = 'proxy-landing-v3';
+const CACHE_NAME = 'proxy-landing-v4';
 
 // Ресурсы, которые кешируются при установке SW
 const PRECACHE = [

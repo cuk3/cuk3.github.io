@@ -25,16 +25,6 @@
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="dns-prefetch" href="https://103.75.126.27.sslip.io">
 
-  <!--
-    Content Security Policy:
-    - script-src: только свои скрипты + конкретная CDN-библиотека с SRI
-    - style-src:  'unsafe-inline' нужен из-за inline-стилей в HTML (style="display:none")
-    - connect-src: gist (dead drop) + https: (динамический API)
-    - img-src:    data: нужен для QR-кода (canvas→dataURL)
-    - form-action / base-uri: ограничены своим origin
-  -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; connect-src *; img-src 'self' data: blob:; font-src 'self'; base-uri 'self'; form-action 'none';">
-
   <title>Фикс для телеграм — обход блокировки</title>
 
   <style>
@@ -497,12 +487,7 @@
     SRI-хэш гарантирует, что загружается именно та версия библиотеки,
     которую мы проверили. Любое изменение файла на CDN → скрипт блокируется.
   -->
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
-    integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGswpsCnE8EHs01w=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer">
-  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
