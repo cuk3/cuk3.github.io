@@ -1,218 +1,146 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Получить MTProxy - Бесплатный прокси для Telegram</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px;
-            background: rgba(50, 40, 90, 0.75);
-            border-radius: 20px;
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        }
-        @supports not (backdrop-filter: blur(1px)) {
-            .container { background: rgba(50, 40, 90, 0.92); }
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 2.5em;
-        }
-        .subtitle {
-            text-align: center;
-            opacity: 0.9;
-            margin-bottom: 40px;
-            font-size: 1.1em;
-        }
-        .proxy-info {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 30px;
-            border-radius: 15px;
-            margin-top: 10px;
-        }
-        .proxy-info h2 {
-            margin-bottom: 20px;
-        }
-        .proxy-link {
-            background: rgba(255, 255, 255, 0.95);
-            color: #333;
-            padding: 15px;
-            border-radius: 8px;
-            word-break: break-all;
-            font-family: monospace;
-            margin: 20px 0;
-            font-size: 0.9em;
-        }
-        .open-btn {
-            display: block;
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #2aabee, #1878c8);
-            border: none;
-            color: white;
-            font-size: 1.2em;
-            font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
-            text-decoration: none;
-            text-align: center;
-            margin-bottom: 12px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(24, 120, 200, 0.4);
-        }
-        .open-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(24, 120, 200, 0.55);
-        }
-        .copy-btn {
-            display: block;
-            width: 100%;
-            padding: 14px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 1.5px solid rgba(255, 255, 255, 0.35);
-            color: white;
-            font-size: 1em;
-            font-weight: 600;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-bottom: 25px;
-            transition: background 0.2s;
-        }
-        .copy-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
-            margin-top: 25px;
-        }
-        .stat-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        .stat-value {
-            font-size: 1.8em;
-            font-weight: bold;
-            margin-top: 8px;
-        }
-        .instructions {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-        }
-        .instructions h3 {
-            margin-bottom: 12px;
-        }
-        .instructions ol {
-            margin-left: 20px;
-            line-height: 1.9;
-        }
-        .toast {
-            position: fixed;
-            bottom: 28px;
-            left: 50%;
-            transform: translateX(-50%) translateY(70px);
-            background: rgba(42, 200, 100, 0.95);
-            color: white;
-            padding: 12px 28px;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 0.95em;
-            transition: transform 0.3s ease;
-            pointer-events: none;
-        }
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTProxy — бесплатный прокси Telegram</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    color: #fff;
+  }
+  .card {
+    background: rgba(255,255,255,0.12);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  }
+  @supports not (backdrop-filter: blur(1px)) {
+    .card { background: rgba(60, 45, 110, 0.95); }
+  }
+  h1 { font-size: 1.4em; text-align: center; margin-bottom: 4px; }
+  .sub { text-align: center; opacity: .7; font-size: .85em; margin-bottom: 18px; }
+
+  .link-box {
+    background: rgba(255,255,255,0.9);
+    color: #333;
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-family: monospace;
+    font-size: .72em;
+    word-break: break-all;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background .15s;
+    position: relative;
+  }
+  .link-box:hover { background: #fff; }
+  .link-hint { font-size: .68em; opacity: .55; margin-top: 4px; text-align: right; font-family: sans-serif; }
+
+  #qr {
+    display: flex; justify-content: center;
+    margin: 14px 0;
+  }
+  #qr canvas, #qr img { border-radius: 10px; }
+
+  .btn {
+    display: block; width: 100%;
+    padding: 13px;
+    border: none; border-radius: 11px;
+    font-size: .97em; font-weight: 600;
+    cursor: pointer; text-decoration: none; text-align: center;
+    margin-bottom: 9px;
+    transition: transform .12s, opacity .12s;
+  }
+  .btn:hover { transform: translateY(-1px); opacity: .92; }
+  .btn:last-child { margin-bottom: 0; }
+
+  .btn-tg   { background: linear-gradient(135deg, #2aabee, #1878c8); color: #fff; }
+  .btn-share{ background: rgba(255,255,255,0.18); color: #fff; border: 1.5px solid rgba(255,255,255,0.3); }
+  .btn-bot  { background: rgba(255,255,255,0.18); color: #fff; border: 1.5px solid rgba(255,255,255,0.3); }
+  .btn-ch   { background: rgba(255,255,255,0.18); color: #fff; border: 1.5px solid rgba(255,255,255,0.3); }
+
+  .divider { border: none; border-top: 1px solid rgba(255,255,255,0.15); margin: 14px 0; }
+
+  .toast {
+    position: fixed; bottom: 22px; left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: rgba(42,200,100,.95); color: #fff;
+    padding: 10px 24px; border-radius: 24px;
+    font-weight: 600; font-size: .9em;
+    transition: transform .25s; pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>🚀 Бесплатный MTProxy</h1>
-        <p class="subtitle">Быстрый и безопасный прокси для Telegram</p>
+<div class="card">
+  <h1>🚀 MTProxy для Telegram</h1>
+  <p class="sub">Бесплатно · RU-сервер · Без регистрации</p>
 
-        <div class="proxy-info">
-            <h2>✅ Ваш прокси готов!</h2>
+  <div class="link-box" onclick="copyLink()" title="Нажмите чтобы скопировать">
+    https://t.me/proxy?server=185.21.9.61&port=443&secret=ee9fe4b27de45ee5f794432d4c01004da07777772e676f6f676c652e636f6d
+    <div class="link-hint">нажмите чтобы скопировать</div>
+  </div>
 
-            <div class="proxy-link" id="proxyLink">https://t.me/proxy?server=185.21.9.61&port=443&secret=ee9fe4b27de45ee5f794432d4c01004da07777772e676f6f676c652e636f6d</div>
+  <div id="qr"></div>
 
-            <a class="open-btn" href="https://t.me/proxy?server=185.21.9.61&port=443&secret=ee9fe4b27de45ee5f794432d4c01004da07777772e676f6f676c652e636f6d">
-                📲 Открыть в Telegram
-            </a>
-            <button class="copy-btn" onclick="copyLink()">📋 Копировать ссылку</button>
+  <a class="btn btn-tg" href="https://t.me/proxy?server=185.21.9.61&port=443&secret=ee9fe4b27de45ee5f794432d4c01004da07777772e676f6f676c652e636f6d">📲 Открыть в Telegram</a>
 
-            <div class="instructions">
-                <h3>📖 Как подключить:</h3>
-                <ol>
-                    <li>Нажмите <strong>«Открыть в Telegram»</strong> выше</li>
-                    <li>В приложении нажмите <strong>«Подключить прокси»</strong></li>
-                    <li>Готово! 🎉</li>
-                </ol>
-            </div>
+  <button class="btn btn-share" onclick="shareProxy()">🔗 Поделиться</button>
 
-            <div class="stats">
-                <div class="stat-card">
-                    <div>📍 IP адрес</div>
-                    <div class="stat-value">185.21.9.61</div>
-                </div>
-                <div class="stat-card">
-                    <div>🔌 Порт</div>
-                    <div class="stat-value">443</div>
-                </div>
-                <div class="stat-card">
-                    <div>🌍 Тип</div>
-                    <div class="stat-value" style="font-size:1.1em;">MTProto</div>
-                </div>
-            </div>
-        </div>
-    </div>
+  <hr class="divider">
 
-    <div class="toast" id="toast">✅ Скопировано!</div>
+  <a class="btn btn-bot" href="https://t.me/ProxyRUSbot">🤖 Прокси бот</a>
+  <a class="btn btn-ch"  href="https://t.me/telegaLIFEpls">📢 Наш канал</a>
+</div>
 
-    <script>
-        var PROXY_URL = "https://t.me/proxy?server=185.21.9.61&port=443&secret=ee9fe4b27de45ee5f794432d4c01004da07777772e676f6f676c652e636f6d";
+<div class="toast" id="toast">✅ Ссылка скопирована!</div>
 
-        function copyLink() {
-            var toast = document.getElementById("toast");
-            function ok() {
-                toast.classList.add("show");
-                setTimeout(function() { toast.classList.remove("show"); }, 2000);
-            }
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(PROXY_URL).then(ok);
-            } else {
-                var ta = document.createElement("textarea");
-                ta.value = PROXY_URL;
-                ta.style.cssText = "position:fixed;opacity:0";
-                document.body.appendChild(ta);
-                ta.focus();
-                ta.select();
-                document.execCommand("copy");
-                document.body.removeChild(ta);
-                ok();
-            }
-        }
-    </script>
+<script>
+  var URL = "https://t.me/proxy?server=185.21.9.61&port=443&secret=ee9fe4b27de45ee5f794432d4c01004da07777772e676f6f676c652e636f6d";
+
+  new QRCode(document.getElementById("qr"), {
+    text: URL,
+    width: 180, height: 180,
+    colorDark: "#2d1f5e",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+  function copyLink() {
+    var t = document.getElementById("toast");
+    function ok() { t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); }, 2000); }
+    if (navigator.clipboard) { navigator.clipboard.writeText(URL).then(ok); }
+    else {
+      var ta = document.createElement("textarea");
+      ta.value = URL; ta.style.cssText = "position:fixed;opacity:0";
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      document.execCommand("copy"); document.body.removeChild(ta); ok();
+    }
+  }
+
+  function shareProxy() {
+    if (navigator.share) {
+      navigator.share({ title: "MTProxy для Telegram", text: "Бесплатный прокси:", url: URL });
+    } else {
+      copyLink();
+    }
+  }
+</script>
 </body>
 </html>
