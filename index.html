@@ -1,683 +1,160 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <!-- Убиваем все Service Worker — они могли кешировать старые баганые версии файлов -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        regs.forEach(r => r.unregister());
-      });
-      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-    }
-  </script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Бесплатный MTProto прокси для Telegram. Обход блокировок в России без VPN.">
-
-  <!-- Open Graph -->
-  <meta property="og:type"        content="website">
-  <meta property="og:title"       content="Фикс Телеграм — бесплатный прокси">
-  <meta property="og:description" content="Получи рабочий MTProxy за 10 секунд. Без VPN, без регистрации.">
-  <meta property="og:image"       content="og-preview.png">
-  <meta name="twitter:card"       content="summary_large_image">
-
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#667eea">
-  <link rel="apple-touch-icon" href="icon-192.png">
-
-  <!-- Favicon SVG -->
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-
-  <!-- DNS prefetch / preconnect -->
-  <link rel="preconnect" href="https://gist.githubusercontent.com">
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link rel="dns-prefetch" href="https://103.75.126.27.sslip.io">
-
-  <title>Фикс для телеграм — обход блокировки</title>
-
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-        'Helvetica Neue', Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 15px;
-      color: #333;
-    }
-
-    .container {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      max-width: 650px;
-      width: 100%;
-      padding: 25px;
-    }
-
-    /* ── Header ───────────────────────────────────────── */
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .title-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .emoji { font-size: 32px; }
-
-    h1 {
-      font-size: 22px;
-      font-weight: 700;
-      color: #1a1a1a;
-      margin: 0;
-    }
-
-    .social-links {
-      display: flex;
-      gap: 8px;
-    }
-
-    .social-btn {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      white-space: nowrap;
-    }
-
-    .social-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-    }
-
-    /* ── Subtitle ─────────────────────────────────────── */
-    .subtitle {
-      color: #666;
-      font-size: 14px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    /* ── Network stats ────────────────────────────────── */
-    .network-stats {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-radius: 12px;
-      padding: 12px;
-      text-align: center;
-      margin-bottom: 15px;
-    }
-
-    .network-stats h3 {
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      opacity: 0.9;
-    }
-
-    .network-stats .stat  { font-size: 24px; font-weight: 700; }
-    .network-stats .label { font-size: 11px; opacity: 0.8; margin-top: 2px; }
-
-    /* ── Main content grid ────────────────────────────── */
-    .main-content {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 20px;
-      align-items: start;
-      margin-bottom: 20px;
-    }
-
-    /* ── QR section ───────────────────────────────────── */
-    .qr-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .qr-container {
-      background: #f7f9fc;
-      border-radius: 12px;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    #qrcode {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #qrcode img { display: block; }
-
-    .qr-hint {
-      font-size: 11px;
-      color: #666;
-      margin-top: 5px;
-    }
-
-    .stats-box {
-      background: #f0f7ff;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 12px;
-      color: #2563eb;
-      font-weight: 500;
-      text-align: center;
-    }
-
-    /* ── Actions ──────────────────────────────────────── */
-    .actions-section {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      justify-content: center;
-    }
-
-    /* ── Status badge ─────────────────────────────────── */
-    .status {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      background: #10b981;
-      color: white;
-      padding: 8px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 500;
-      margin-bottom: 5px;
-    }
-
-    .status.loading { background: #f59e0b; }
-    .status.error   { background: #ef4444; }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      background: white;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-      flex-shrink: 0;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.5; }
-    }
-
-    .spinner {
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top: 2px solid white;
-      border-radius: 50%;
-      width: 16px;
-      height: 16px;
-      animation: spin 1s linear infinite;
-      flex-shrink: 0;
-    }
-
-    @keyframes spin {
-      0%   { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* ── Buttons ──────────────────────────────────────── */
-    .button {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 12px 18px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      text-decoration: none;
-    }
-
-    .button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-    }
-
-    .button:active { transform: translateY(0); }
-
-    .button.secondary {
-      background: #f7f9fc;
-      color: #667eea;
-      border: 2px solid #e1e8f0;
-    }
-
-    .button.secondary:hover {
-      background: #eef2f7;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    /* ── Link box ─────────────────────────────────────── */
-    .link-box {
-      background: #f7f9fc;
-      border: 2px solid #e1e8f0;
-      border-radius: 10px;
-      padding: 10px;
-      margin-bottom: 15px;
-      word-break: break-all;
-      font-size: 11px;
-      color: #555;
-      font-family: 'Courier New', monospace;
-      user-select: all;
-      cursor: pointer;
-      transition: background 0.2s;
-      text-align: center;
-    }
-
-    .link-box:hover { background: #eef2f7; }
-
-    /* ── Toast ────────────────────────────────────────── */
-    .toast {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: #10b981;
-      color: white;
-      padding: 14px 20px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 500;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-      opacity: 0;
-      transition: all 0.3s ease;
-      z-index: 1000;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* ── Fade-in для карточки ────────────────────────── */
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .container {
-      animation: fadeInUp 0.45s ease both;
-    }
-
-    /* ── Fade-in для QR-блока ────────────────────────── */
-    .qr-container {
-      transition: opacity 0.35s ease, transform 0.35s ease;
-    }
-
-    .qr-container.hidden {
-      opacity: 0;
-      transform: scale(0.92);
-      pointer-events: none;
-    }
-
-    /* ── Тёмная тема ─────────────────────────────────── */
-    @media (prefers-color-scheme: dark) {
-      body { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); }
-
-      .container {
-        background: #1e1e2e;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-      }
-
-      h1 { color: #e2e8f0; }
-
-      .subtitle { color: #94a3b8; }
-
-      .qr-container { background: #2a2a3e; }
-      .qr-hint      { color: #94a3b8; }
-
-      .stats-box {
-        background: #1e3a5f;
-        color: #60a5fa;
-      }
-
-      .link-box {
-        background: #2a2a3e;
-        border-color: #3f3f5c;
-        color: #94a3b8;
-      }
-
-      .link-box:hover { background: #333350; }
-
-      .button.secondary {
-        background: #2a2a3e;
-        color: #818cf8;
-        border-color: #3f3f5c;
-      }
-
-      .button.secondary:hover { background: #333350; }
-    }
-
-    /* ── Кнопка канала ───────────────────────────────── */
-    .button.channel-btn {
-      background: linear-gradient(135deg, #229ED9 0%, #1a7fb5 100%);
-      margin-top: 4px;
-    }
-
-    .button.channel-btn:hover {
-      box-shadow: 0 8px 20px rgba(34, 158, 217, 0.4);
-    }
-
-    /* ── Responsive ───────────────────────────────────── */
-    @media (max-width: 600px) {
-      .main-content {
-        grid-template-columns: 1fr;
-        justify-items: center;
-      }
-
-      .header {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .title-group   { justify-content: center; }
-      .social-links  { justify-content: center; }
-
-      #qrcode canvas,
-      #qrcode img {
-        width: 180px !important;
-        height: 180px !important;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTProxy Network - Вечная точка входа</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            max-width: 600px;
+            background: rgba(50, 40, 90, 0.75);
+            padding: 40px;
+            border-radius: 20px;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        @supports not (backdrop-filter: blur(1px)) {
+            .container { background: rgba(50, 40, 90, 0.92); }
+        }
+        h1 {
+            margin: 0 0 20px 0;
+            font-size: 2.5em;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status {
+            font-size: 1.2em;
+            margin-top: 20px;
+            opacity: 0.9;
+        }
+        .mirror-list {
+            margin-top: 30px;
+            text-align: left;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        .mirror-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .mirror-item.working {
+            background: rgba(0, 255, 0, 0.2);
+        }
+        .mirror-item.failed {
+            background: rgba(255, 0, 0, 0.2);
+        }
+        a {
+            color: white;
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-
-    <div class="header">
-      <div class="title-group">
-        <span class="emoji">🚀</span>
-        <h1>Фикс Телеграм</h1>
-      </div>
-      <div class="social-links">
-        <a href="https://t.me/telegaLIFEpls" class="social-btn"
-           target="_blank" rel="noopener noreferrer">
-          📢 Канал
-        </a>
-        <a href="https://t.me/telegaLIFEpls_bot" class="social-btn"
-           target="_blank" rel="noopener noreferrer">
-          🤖 Бот
-        </a>
-      </div>
+    <div class="container">
+        <h1>🛡️ MTProxy Network</h1>
+        <div class="spinner"></div>
+        <div class="status" id="status">Поиск актуального зеркала...</div>
+        <div class="mirror-list" id="mirrors"></div>
     </div>
 
-    <p class="subtitle">Быстрый и бесплатный обход блокировки</p>
+    <script>
+        const DEAD_DROP_URL = 'https://gist.githubusercontent.com/cuk3/04c44a18430914d72a83450c3cf78b54/raw';
+        const statusEl = document.getElementById('status');
+        const mirrorsEl = document.getElementById('mirrors');
 
-    <div class="network-stats" id="networkStats" style="display: none;">
-      <h3>Активных пользователей в сети</h3>
-      <div class="stat" id="totalUsers">-</div>
-      <div class="label" id="networkInfo">Загрузка...</div>
-    </div>
+        async function checkMirror(url) {
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 3000);
+                
+                const response = await fetch(url + '/docs', {
+                    signal: controller.signal,
+                    mode: 'no-cors'  // Обход CORS для проверки
+                });
+                
+                clearTimeout(timeout);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
 
-    <div class="main-content">
+        async function findWorkingMirror() {
+            try {
+                // Получаем список зеркал из Dead Drop
+                const response = await fetch(DEAD_DROP_URL);
+                const data = await response.json();
+                
+                const mirrors = data.user_mirrors || [data.api_url];
+                
+                statusEl.textContent = `Проверяем ${mirrors.length} зеркал...`;
+                mirrorsEl.style.display = 'block';
+                
+                // Проверяем все зеркала параллельно
+                const checks = mirrors.map(async (mirror, index) => {
+                    const working = await checkMirror(mirror);
+                    
+                    const item = document.createElement('div');
+                    item.className = `mirror-item ${working ? 'working' : 'failed'}`;
+                    item.textContent = `${working ? '✅' : '❌'} ${mirror}`;
+                    mirrorsEl.appendChild(item);
+                    
+                    return { mirror, working };
+                });
+                
+                const results = await Promise.all(checks);
+                const workingMirror = results.find(r => r.working);
+                
+                if (workingMirror) {
+                    statusEl.textContent = `Найдено рабочее зеркало! Перенаправление...`;
+                    
+                    // Перенаправляем на страницу получения прокси
+                    setTimeout(() => {
+                        window.location.href = '/proxy/get.html?api=' + encodeURIComponent(workingMirror.mirror);
+                    }, 1500);
+                } else {
+                    statusEl.textContent = '❌ Все зеркала недоступны!';
+                    statusEl.innerHTML += '<br><small>Попробуйте через VPN или позже</small>';
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusEl.textContent = '❌ Ошибка загрузки конфигурации';
+                statusEl.innerHTML += `<br><small>${error.message}</small>`;
+            }
+        }
 
-      <div class="qr-section">
-        <div class="status loading" id="status">
-          <span class="spinner"></span>
-          <span id="statusText">Подбираем...</span>
-        </div>
-
-        <div class="qr-container hidden" id="qrContainer" style="display: none;">
-          <div id="qrcode"></div>
-          <div class="qr-hint">📱 Сканируй камерой</div>
-        </div>
-
-        <div class="stats-box" id="proxyStats" style="display: none;">
-          👥 <span id="proxyUsers">0</span> польз.
-        </div>
-      </div>
-
-      <div class="actions-section">
-        <button class="button" id="getProxyBtn" onclick="getNewProxy()">
-          🔄 Получить прокси
-        </button>
-
-        <button class="button secondary" id="copyBtn"
-                onclick="copyLink()" style="display: none;">
-          📋 Скопировать
-        </button>
-
-        <a href="#" id="telegramLink" class="button secondary"
-           style="display: none;">
-          ✈️ Открыть в Telegram
-        </a>
-
-        <button class="button secondary" id="shareBtn"
-                onclick="shareProxy()" style="display: none;">
-          🔗 Поделиться
-        </button>
-
-        <a href="https://t.me/telegaLIFEpls" class="button channel-btn"
-           target="_blank" rel="noopener noreferrer">
-          📢 Наш канал
-        </a>
-      </div>
-
-    </div>
-
-    <div class="link-box" id="linkBox"
-         onclick="copyLink()" style="display: none;"></div>
-
-  </div>
-
-  <div class="toast" id="toast">Ссылка скопирована!</div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script>
-'use strict';
-
-var API_BASE    = 'https://103.75.126.27.sslip.io';
-var LS_CACHE_KEY = 'proxy_cache';
-var currentProxy = null;
-var statsInterval = null;
-
-function fetchT(url, ms) {
-  var ctrl = new AbortController();
-  var t = setTimeout(function(){ ctrl.abort(); }, ms || 8000);
-  return fetch(url, { signal: ctrl.signal }).finally(function(){ clearTimeout(t); });
-}
-
-function isValidHost(v) {
-  if (typeof v !== 'string') return false;
-  return /^(\d{1,3}\.){3}\d{1,3}$/.test(v) || /^[a-zA-Z0-9][a-zA-Z0-9\-.]{0,251}[a-zA-Z0-9]$/.test(v);
-}
-function isValidPort(v) { var n = parseInt(v,10); return n >= 1 && n <= 65535; }
-function isValidSecret(v) { return typeof v === 'string' && v.length >= 32 && v.length <= 300; }
-
-function saveCache(p) { try { localStorage.setItem(LS_CACHE_KEY, JSON.stringify(p)); } catch(e){} }
-function loadCache() {
-  try {
-    var d = JSON.parse(localStorage.getItem(LS_CACHE_KEY));
-    if (d && isValidHost(d.ip) && isValidPort(d.port) && isValidSecret(d.secret)) return d;
-  } catch(e){}
-  return null;
-}
-
-function setStatus(cls, html) {
-  var el = document.getElementById('status');
-  if (!el) return;
-  el.className = cls ? 'status ' + cls : 'status';
-  el.innerHTML = html;
-}
-
-function showEl(id, display) {
-  var el = document.getElementById(id);
-  if (el) el.style.display = display || 'block';
-}
-function hideEl(id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; }
-
-function getNewProxy() {
-  hideEl('qrContainer'); hideEl('linkBox'); hideEl('telegramLink');
-  hideEl('copyBtn'); hideEl('shareBtn'); hideEl('proxyStats');
-  var btn = document.getElementById('getProxyBtn');
-  if (btn) btn.disabled = true;
-  setStatus('loading', '<span class="spinner"></span> Подбираем...');
-
-  fetchT(API_BASE + '/best-node', 8000)
-    .then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
-    .then(function(data) {
-      if (!isValidHost(data.ip))       throw new Error('bad ip: ' + data.ip);
-      if (!isValidPort(data.port))     throw new Error('bad port');
-      if (!isValidSecret(data.secret)) throw new Error('bad secret');
-      currentProxy = data;
-      saveCache(data);
-      renderProxy(data, false);
-      startStats(data.ip);
-    })
-    .catch(function(err) {
-      console.error('[proxy]', err);
-      var cached = loadCache();
-      if (cached) { currentProxy = cached; renderProxy(cached, true); return; }
-      setStatus('error', '❌ ' + err.message);
-      if (btn) { btn.disabled = false; btn.textContent = '🔄 Попробовать снова'; }
-    });
-}
-
-function renderProxy(data, fromCache) {
-  var ip  = encodeURIComponent(data.ip);
-  var sec = encodeURIComponent(data.secret);
-  var tg  = 'tg://proxy?server=' + ip + '&port=' + data.port + '&secret=' + sec;
-  var web = 'https://t.me/proxy?server=' + ip + '&port=' + data.port + '&secret=' + sec;
-
-  var lb = document.getElementById('linkBox');
-  if (lb) { lb.textContent = web; showEl('linkBox'); }
-
-  var tl = document.getElementById('telegramLink');
-  if (tl) { tl.href = tg; showEl('telegramLink', 'flex'); }
-
-  var qrWrap = document.getElementById('qrContainer');
-  if (qrWrap) { qrWrap.classList.remove('hidden'); qrWrap.style.display = 'flex'; }
-
-  var qrEl = document.getElementById('qrcode');
-  if (qrEl && typeof QRCode !== 'undefined') {
-    qrEl.innerHTML = '';
-    var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setTimeout(function() {
-      new QRCode(qrEl, {
-        text: tg, width: 150, height: 150,
-        colorDark: dark ? '#e2e8f0' : '#1a1a1a',
-        colorLight: dark ? '#2a2a3e' : '#f7f9fc',
-        correctLevel: QRCode.CorrectLevel.M
-      });
-    }, 50);
-  }
-  showEl('copyBtn', 'flex');
-  if (navigator.share) showEl('shareBtn', 'flex');
-
-  setStatus(fromCache ? 'loading' : '', fromCache
-    ? '⚠️ Кеш'
-    : '<span class="status-dot"></span> Готово');
-
-  var btn = document.getElementById('getProxyBtn');
-  if (btn) { btn.disabled = false; btn.textContent = '🔄 Другой прокси'; }
-}
-
-function startStats(ip) {
-  if (statsInterval) clearInterval(statsInterval);
-  loadStats(ip);
-  statsInterval = setInterval(function(){ if(currentProxy) loadStats(currentProxy.ip); }, 30000);
-}
-
-function loadStats(ip) {
-  fetchT(API_BASE + '/node-stats/' + encodeURIComponent(ip), 5000)
-    .then(function(r){ return r.ok ? r.json() : null; })
-    .then(function(d){
-      if (!d) return;
-      var pu = document.getElementById('proxyUsers');
-      if (pu) pu.textContent = d.current_users || 0;
-      showEl('proxyStats');
-    }).catch(function(){});
-
-  fetchT(API_BASE + '/total-stats', 5000)
-    .then(function(r){ return r.ok ? r.json() : null; })
-    .then(function(d){
-      if (!d) return;
-      var tu = document.getElementById('totalUsers');
-      var ni = document.getElementById('networkInfo');
-      if (tu) tu.textContent = (d.total_users||0).toLocaleString('ru-RU');
-      if (ni) ni.textContent = (d.total_nodes||0) + ' серверов';
-      showEl('networkStats');
-    }).catch(function(){});
-}
-
-function copyLink() {
-  if (!currentProxy) return;
-  var url = 'https://t.me/proxy?server=' + encodeURIComponent(currentProxy.ip) +
-    '&port=' + currentProxy.port + '&secret=' + encodeURIComponent(currentProxy.secret);
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(function(){ showToast('Скопировано!'); });
-  } else { showToast('Скопируй вручную'); }
-}
-
-function shareProxy() {
-  if (!navigator.share) return;
-  navigator.share({
-    title: 'Фикс Телеграм',
-    text: '🚀 Бесплатный MTProxy для Telegram — без VPN\n\n📢 t.me/telegaLIFEpls',
-    url: 'https://cuk3.github.io/'
-  }).catch(function(){});
-}
-
-function showToast(text) {
-  var t = document.getElementById('toast');
-  if (!t) return;
-  t.textContent = text;
-  t.classList.add('show');
-  setTimeout(function(){ t.classList.remove('show'); }, 2500);
-}
-
-window.onload = getNewProxy;
-window.getNewProxy = getNewProxy;
-window.copyLink    = copyLink;
-window.shareProxy  = shareProxy;
-  </script>
+        // Запускаем поиск при загрузке страницы
+        findWorkingMirror();
+    </script>
 </body>
 </html>
