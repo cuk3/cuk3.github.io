@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MTProxy &mdash; Telegram</title>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -47,8 +46,9 @@ h1 {
   justify-content: center;
   margin-bottom: 28px;
 }
-#qr canvas, #qr img {
+#qr img {
   border-radius: 8px;
+  display: block;
 }
 
 .sep {
@@ -112,40 +112,25 @@ h1 {
   <h1>MTProxy</h1>
   <p class="sub">free &middot; ru &middot; telegram</p>
 
-  <div id="qr"></div>
+  <div id="qr"><img src="data:image/png;base64,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" width="220" height="220" alt="QR"></div>
 
   <div class="sep"></div>
 
-  <a class="btn btn-main" href="https://t.me/proxy?server=185.21.9.61&port=443&secret=ee9fe4b27de45ee5f794432d4c01004da07777772e676f6f676c652e636f6d">
-    &#x26A1; &#x41F;&#x43E;&#x434;&#x43A;&#x43B;&#x44E;&#x447;&#x438;&#x442;&#x44C;&#x441;&#x44F;
+  <a class="btn btn-main" href="tg://proxy?server=185.21.9.61&port=443&secret=ee9fe4b27de45ee5f794432d4c01004da07777772e676f6f676c652e636f6d">
+    ⚡ Подключиться
   </a>
 
-  <button class="btn btn-sec" onclick="shareProxy()">
-    &#x1F517; &#x41F;&#x43E;&#x434;&#x435;&#x43B;&#x438;&#x442;&#x44C;&#x441;&#x44F;
-  </button>
+  <button class="btn btn-sec" onclick="shareProxy()">🔗 Поделиться</button>
 
-  <a class="btn btn-sec" href="https://t.me/ProxyRUSbot">
-    &#x1F916; &#x41D;&#x430;&#x448; &#x431;&#x43E;&#x442;
-  </a>
+  <a class="btn btn-sec" href="https://t.me/ProxyRUSbot">🤖 Наш бот</a>
 
-  <a class="btn btn-sec" href="https://t.me/telegaLIFEpls">
-    &#x1F4E2; &#x41D;&#x430;&#x448; &#x43A;&#x430;&#x43D;&#x430;&#x43B;
-  </a>
+  <a class="btn btn-sec" href="https://t.me/telegaLIFEpls">📢 Наш канал</a>
 </div>
 
-<div class="toast" id="toast">&#x2705; &#x421;&#x441;&#x44B;&#x43B;&#x43A;&#x430; &#x441;&#x43A;&#x43E;&#x43F;&#x438;&#x440;&#x43E;&#x432;&#x430;&#x43D;&#x430;!</div>
+<div class="toast" id="toast">✅ Ссылка скопирована!</div>
 
 <script>
   var PROXY = "https://t.me/proxy?server=185.21.9.61&port=443&secret=ee9fe4b27de45ee5f794432d4c01004da07777772e676f6f676c652e636f6d";
-
-  new QRCode(document.getElementById("qr"), {
-    text: PROXY,
-    width: 220,
-    height: 220,
-    colorDark: "#ffffff",
-    colorLight: "#111111",
-    correctLevel: QRCode.CorrectLevel.M
-  });
 
   function toast() {
     var t = document.getElementById("toast");
