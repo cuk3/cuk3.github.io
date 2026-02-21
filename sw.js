@@ -1,6 +1,6 @@
 // Proxy Landing — Service Worker (PWA)
 // Версия кэша: обновляй при деплое чтобы сбросить старый кэш у пользователей
-const CACHE_NAME = 'proxy-landing-v5';
+const CACHE_NAME = 'proxy-landing-v6';
 
 const PRECACHE = [
   '/',
