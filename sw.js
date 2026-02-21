@@ -1,8 +1,7 @@
 // Proxy Landing — Service Worker (PWA)
-// Версию меняй при каждом деплое чтобы инвалидировать кеш
-const CACHE_NAME = 'proxy-landing-v4';
+// Версия кэша: обновляй при деплое чтобы сбросить старый кэш у пользователей
+const CACHE_NAME = 'proxy-landing-v5';
 
-// Ресурсы, которые кешируются при установке SW
 const PRECACHE = [
   '/',
   '/index.html',
@@ -27,16 +26,15 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Стратегия: Network First для API-запросов, Cache First для статики
+// Стратегия: Cache First для статики, Network для API / CDN
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // API-запросы и dead drop — только сеть, без кеша
+  // Сторонние запросы — без кэша
   if (
-    url.hostname === 'gist.githubusercontent.com' ||
-    url.hostname.endsWith('sslip.io')
+    url.hostname !== self.location.hostname
   ) {
-    return; // браузер обработает сам
+    return;
   }
 
   // Статика — Cache First
