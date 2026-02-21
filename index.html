@@ -1,160 +1,148 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTProxy Network - Вечная точка входа</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            text-align: center;
-            max-width: 600px;
-            background: rgba(50, 40, 90, 0.75);
-            padding: 40px;
-            border-radius: 20px;
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        }
-        @supports not (backdrop-filter: blur(1px)) {
-            .container { background: rgba(50, 40, 90, 0.92); }
-        }
-        h1 {
-            margin: 0 0 20px 0;
-            font-size: 2.5em;
-        }
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid white;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .status {
-            font-size: 1.2em;
-            margin-top: 20px;
-            opacity: 0.9;
-        }
-        .mirror-list {
-            margin-top: 30px;
-            text-align: left;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 20px;
-            border-radius: 10px;
-            display: none;
-        }
-        .mirror-item {
-            padding: 10px;
-            margin: 5px 0;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            font-family: monospace;
-        }
-        .mirror-item.working {
-            background: rgba(0, 255, 0, 0.2);
-        }
-        .mirror-item.failed {
-            background: rgba(255, 0, 0, 0.2);
-        }
-        a {
-            color: white;
-            text-decoration: underline;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Фикс Телеграм — MTProxy</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/favicon.svg">
+  <meta name="theme-color" content="#667eea">
+  <meta property="og:title" content="Фикс Телеграм — MTProxy">
+  <meta property="og:description" content="Быстрый и бесплатный обход блокировки Telegram">
+  <meta property="og:image" content="/og-preview.png">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      color: #fff;
+    }
+    .card {
+      background: rgba(255,255,255,.12);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 24px;
+      padding: 36px 28px;
+      width: 100%; max-width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    }
+    @supports not (backdrop-filter: blur(1px)) {
+      .card { background: rgba(80,50,140,.9); }
+    }
+    .title { font-size: 1.6em; font-weight: 700; margin-bottom: 14px; }
+    .nav { display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; }
+    .nav a {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.3);
+      color: #fff; text-decoration: none;
+      padding: 8px 16px; border-radius: 20px;
+      font-size: .88em; font-weight: 600;
+      transition: background .15s;
+    }
+    .nav a:hover { background: rgba(255,255,255,.35); }
+    .sub { font-size: .9em; opacity: .8; margin-bottom: 24px; }
+
+    .status { min-height: 28px; font-size: .95em; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 16px; }
+    .status.loading { opacity: .8; }
+    .status.error   { color: #fca5a5; }
+    .spinner {
+      width: 18px; height: 18px; flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    .status-dot { width: 10px; height: 10px; flex-shrink: 0; background: #4ade80; border-radius: 50%; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #qrContainer { display: none; justify-content: center; margin-bottom: 16px; }
+    #qrcode canvas, #qrcode img { border-radius: 10px; }
+
+    #linkBox {
+      display: none;
+      background: rgba(0,0,0,.25);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: .78em;
+      font-family: monospace;
+      word-break: break-all;
+      color: rgba(255,255,255,.85);
+      margin-bottom: 14px;
+    }
+
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 14px;
+      border: none; border-radius: 12px;
+      font-size: .95em; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      margin-bottom: 10px;
+      transition: transform .1s, opacity .1s;
+    }
+    .btn:hover { transform: translateY(-1px); opacity: .92; }
+    .btn:disabled { opacity: .55; cursor: default; transform: none; }
+    .btn:last-child { margin-bottom: 0; }
+
+    .btn-primary { background: #f59e0b; color: #1a1a1a; }
+    .btn-connect { background: #fff; color: #1a1a1a; }
+    .btn-outline { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.25); }
+
+    #telegramLink { display: none; }
+    #copyBtn      { display: none; }
+    #shareBtn     { display: none; }
+
+    #proxyStats, #networkStats { display: none; font-size: .82em; opacity: .75; margin-top: 4px; }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #fff; color: #111;
+      padding: 10px 22px; border-radius: 10px;
+      font-weight: 600; font-size: .88em;
+      transition: transform .25s; pointer-events: none;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🛡️ MTProxy Network</h1>
-        <div class="spinner"></div>
-        <div class="status" id="status">Поиск актуального зеркала...</div>
-        <div class="mirror-list" id="mirrors"></div>
-    </div>
+<div class="card">
+  <div class="title">🚀 Фикс Телеграм</div>
+  <div class="nav">
+    <a href="https://t.me/telegaLIFEpls">📢 Канал</a>
+    <a href="https://t.me/ProxyRUSbot">🤖 Бот</a>
+  </div>
+  <p class="sub">Быстрый и бесплатный обход блокировки</p>
 
-    <script>
-        const DEAD_DROP_URL = 'https://gist.githubusercontent.com/cuk3/04c44a18430914d72a83450c3cf78b54/raw';
-        const statusEl = document.getElementById('status');
-        const mirrorsEl = document.getElementById('mirrors');
+  <div id="status" class="status loading"><span class="spinner"></span> Подбираем...</div>
 
-        async function checkMirror(url) {
-            try {
-                const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 3000);
-                
-                const response = await fetch(url + '/docs', {
-                    signal: controller.signal,
-                    mode: 'no-cors'  // Обход CORS для проверки
-                });
-                
-                clearTimeout(timeout);
-                return true;
-            } catch (e) {
-                return false;
-            }
-        }
+  <div id="qrContainer"><div id="qrcode"></div></div>
+  <div id="linkBox"></div>
 
-        async function findWorkingMirror() {
-            try {
-                // Получаем список зеркал из Dead Drop
-                const response = await fetch(DEAD_DROP_URL);
-                const data = await response.json();
-                
-                const mirrors = data.user_mirrors || [data.api_url];
-                
-                statusEl.textContent = `Проверяем ${mirrors.length} зеркал...`;
-                mirrorsEl.style.display = 'block';
-                
-                // Проверяем все зеркала параллельно
-                const checks = mirrors.map(async (mirror, index) => {
-                    const working = await checkMirror(mirror);
-                    
-                    const item = document.createElement('div');
-                    item.className = `mirror-item ${working ? 'working' : 'failed'}`;
-                    item.textContent = `${working ? '✅' : '❌'} ${mirror}`;
-                    mirrorsEl.appendChild(item);
-                    
-                    return { mirror, working };
-                });
-                
-                const results = await Promise.all(checks);
-                const workingMirror = results.find(r => r.working);
-                
-                if (workingMirror) {
-                    statusEl.textContent = `Найдено рабочее зеркало! Перенаправление...`;
-                    
-                    // Перенаправляем на страницу получения прокси
-                    setTimeout(() => {
-                        window.location.href = '/proxy/get.html?api=' + encodeURIComponent(workingMirror.mirror);
-                    }, 1500);
-                } else {
-                    statusEl.textContent = '❌ Все зеркала недоступны!';
-                    statusEl.innerHTML += '<br><small>Попробуйте через VPN или позже</small>';
-                }
-                
-            } catch (error) {
-                console.error('Error:', error);
-                statusEl.textContent = '❌ Ошибка загрузки конфигурации';
-                statusEl.innerHTML += `<br><small>${error.message}</small>`;
-            }
-        }
+  <a id="telegramLink" class="btn btn-connect">⚡ Подключиться</a>
+  <button id="copyBtn"  class="btn btn-outline" onclick="copyLink()">📋 Копировать ссылку</button>
+  <button id="shareBtn" class="btn btn-outline" onclick="shareProxy()">📤 Поделиться</button>
 
-        // Запускаем поиск при загрузке страницы
-        findWorkingMirror();
-    </script>
+  <button id="getProxyBtn" class="btn btn-primary" onclick="getNewProxy()" disabled>
+    🔄 Получить прокси
+  </button>
+
+  <div id="proxyStats">👥 Онлайн: <span id="proxyUsers">—</span></div>
+  <div id="networkStats">🌐 Сеть: <span id="networkInfo">—</span> · Всего: <span id="totalUsers">—</span></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+</script>
 </body>
 </html>
