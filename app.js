@@ -73,7 +73,7 @@ function renderProxy(data, fromCache) {
   if (qrEl && typeof QRCode !== 'undefined') {
     qrEl.innerHTML = '';
     new QRCode(qrEl, {
-      text: tgUrl, width: 150, height: 150,
+      text: 'https://cuk3.github.io/', width: 150, height: 150,
       colorDark:  '#e2e8f0',
       colorLight: '#1a1a1a',
       correctLevel: QRCode.CorrectLevel.M
