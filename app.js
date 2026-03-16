@@ -72,11 +72,10 @@ function renderProxy(data, fromCache) {
   const qrEl = document.getElementById('qrcode');
   if (qrEl && typeof QRCode !== 'undefined') {
     qrEl.innerHTML = '';
-    const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     new QRCode(qrEl, {
       text: tgUrl, width: 150, height: 150,
-      colorDark:  dark ? '#e2e8f0' : '#1a1a1a',
-      colorLight: dark ? '#2a2a3e' : '#f7f9fc',
+      colorDark:  '#e2e8f0',
+      colorLight: '#1a1a1a',
       correctLevel: QRCode.CorrectLevel.M
     });
   }
