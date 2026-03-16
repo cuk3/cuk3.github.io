@@ -1,11 +1,11 @@
-{
-  "name": "Фикс Телеграм",
-  "short_name": "ФиксТГ",
-  "description": "Бесплатный MTProxy для Telegram — обход блокировок за 10 секунд",
+﻿{
+  "name": "икс Телеграм",
+  "short_name": "иксТ",
+  "description": "есплатный MTProxy для Telegram — обход блокировок за 10 секунд",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#667eea",
-  "theme_color": "#667eea",
+  "background_color": "#111111",
+  "theme_color": "#111111",
   "lang": "ru",
   "icons": [
     {
