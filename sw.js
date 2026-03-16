@@ -1,6 +1,6 @@
 // Proxy Landing — Service Worker (PWA)
 // Версия кэша: обновляй при деплое чтобы сбросить старый кэш у пользователей
-const CACHE_NAME = 'proxy-landing-v7';
+const CACHE_NAME = 'proxy-landing-v8';
 
 const PRECACHE = [
   '/',
@@ -26,28 +26,23 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Стратегия: Cache First для статики, Network для API / CDN
+// Стратегия: Network First — всегда свежий контент, кэш только как запасной
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
   // Сторонние запросы — без кэша
-  if (
-    url.hostname !== self.location.hostname
-  ) {
+  if (url.hostname !== self.location.hostname) {
     return;
   }
 
-  // Статика — Cache First
+  // Network First: пробуем сеть, при ошибке отдаём из кэша
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(response => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
-        }
-        return response;
-      });
-    })
+    fetch(event.request).then(response => {
+      if (response.ok) {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
+      }
+      return response;
+    }).catch(() => caches.match(event.request))
   );
 });
